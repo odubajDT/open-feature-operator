@@ -46,8 +46,8 @@ const (
 	defaultSocketPath                string = ""
 	defaultEvaluator                 string = "json"
 	defaultImage                     string = "ghcr.io/open-feature/flagd"
-	// INPUT_FLAGD_VERSION` is replaced in the `update-flagd` Makefile target
-	defaultTag             string           = "INPUT_FLAGD_VERSION"
+	// renovate: datasource=github-releases depName=open-feature/flagd
+	defaultTag             string           = "v0.4.1"
 	defaultLogFormat       string           = "json"
 	SyncProviderKubernetes SyncProviderType = "kubernetes"
 	SyncProviderFilepath   SyncProviderType = "filepath"
