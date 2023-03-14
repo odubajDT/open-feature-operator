@@ -21,6 +21,12 @@
       "datasourceTemplate": "github-releases"
     },
     {
+      "fileMatch": ["^apis/core/v1alpha1/flagsourceconfiguration_types.go$"],
+      "matchStrings": ["defaultTag.*= \"(?<currentValue>.*?)\"\n"],
+      "depNameTemplate": "open-feature/flagd",
+      "datasourceTemplate": "github-releases"
+    },
+    {
       "fileMatch": ["^chart/open-feature-operator/values.yaml$"],
       "matchStrings": ["repository: \"ghcr\\.io\/open-feature\/flagd\"\\n\\s*tag: (?<currentValue>.*?)\\n"],
       "depNameTemplate": "open-feature/flagd",

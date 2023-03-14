@@ -6,7 +6,6 @@ ARCH?=amd64
 IMG?=$(RELEASE_REGISTRY)/$(RELEASE_IMAGE)
 # customize overlay to be used in the build, DEFAULT or HELM
 KUSTOMIZE_OVERLAY ?= DEFAULT
-# renovate: datasource=github-releases depName=open-feature/flagd
 FLAGD_VERSION=v0.4.1
 CHART_VERSION=v0.2.29# x-release-please-version
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
