@@ -15,12 +15,6 @@
   },
   "regexManagers": [
     {
-      "fileMatch": ["^Makefile$"],
-      "matchStrings": ["FLAGD_VERSION=(?<currentValue>.*?)\\n"],
-      "depNameTemplate": "open-feature/flagd",
-      "datasourceTemplate": "github-releases"
-    },
-    {
       "fileMatch": ["^apis/core/v1alpha1/flagsourceconfiguration_types.go$"],
       "matchStrings": ["defaultTag.*= \"(?<currentValue>.*?)\"\n"],
       "depNameTemplate": "open-feature/flagd",
