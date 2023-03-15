@@ -39,27 +39,24 @@ jobs:
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
       - name: Run linter
         run: make lint
-      # # Ensure there is no diff when make update-flagd is run 
-      - run: make update-flagd
-      - name: Check version diff 
-        run: |
-          if [ ! -z "$(git status --porcelain)" ]; then exit 0; fi
-          echo "flagd version replace did not produce diff. Please revert this change in apis/core/v1alpha1/flagsourceconfiguration_types.go"
-          exit 1
 
   test:
+    name: Controller/Webhook Tests
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: ${{ env.DEFAULT_GO_VERSION }}
+
       - name: Checkout repository
         uses: actions/checkout@v3
+
       - name: Setup Environment
         run: |
           echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
           echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
       - name: Module cache
         uses: actions/cache@v3
         env:
@@ -67,10 +64,47 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
+
       - name: Run tests
         run: make test
+        
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
+        with:
+          flags: tests
+
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.DEFAULT_GO_VERSION }}
+
+      - name: Setup Environment
+        run: |
+          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Module cache
+        uses: actions/cache@v3
+        env:
+          cache-name: go-mod-cache
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Unit Test
+        run: make unit-test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          flags: unit-tests
 
   docker-local:
     permissions:
@@ -79,8 +113,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Update flagd tag
-        run: make update-flagd
       - name: Set up QEMU
         uses: docker/setup-qemu-action@master
         with:
@@ -89,7 +121,7 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@master
       - name: Build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -143,3 +175,14 @@ jobs:
         run: |
           IMG=open-feature-operator-local:${{ github.sha }} make deploy-operator
           IMG=open-feature-operator-local:${{ github.sha }} make e2e-test
+      - name: Create reports
+        if: always()
+        working-directory: ./.github/scripts
+        run: ./create-reports.sh
+
+      - name: Upload cluster logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-tests
+          path: .github/scripts/logs
