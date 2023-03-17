@@ -27,7 +27,6 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-	"github.com/open-feature/open-feature-operator/controllers/common"
 	controllercommon "github.com/open-feature/open-feature-operator/controllers/common"
 	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -199,8 +198,8 @@ func main() {
 	if err := mgr.GetFieldIndexer().IndexField(
 		context.Background(),
 		&appsV1.Deployment{},
-		fmt.Sprintf("%s/%s", controllercommon.OpenFeatureAnnotationPath, common.FlagSourceConfigurationAnnotation),
-		common.FlagSourceConfigurationIndex,
+		fmt.Sprintf("%s/%s", controllercommon.OpenFeatureAnnotationPath, controllercommon.FlagSourceConfigurationAnnotation),
+		controllercommon.FlagSourceConfigurationIndex,
 	); err != nil {
 		setupLog.Error(
 			err,
