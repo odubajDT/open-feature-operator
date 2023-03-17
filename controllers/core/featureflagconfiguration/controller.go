@@ -60,17 +60,19 @@ type FeatureFlagConfigurationReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 
+const CrdName = "FeatureFlagConfiguration"
+
 func (r *FeatureFlagConfigurationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	r.Log.Info("Reconciling" + common.CrdName)
+	r.Log.Info("Reconciling" + CrdName)
 
 	ffconf := &corev1alpha1.FeatureFlagConfiguration{}
 	if err := r.Client.Get(ctx, req.NamespacedName, ffconf); err != nil {
 		if errors.IsNotFound(err) {
 			// taking down all associated K8s resources is handled by K8s
-			r.Log.Info(common.CrdName + " resource not found. Ignoring since object must be deleted")
+			r.Log.Info(CrdName + " resource not found. Ignoring since object must be deleted")
 			return r.finishReconcile(nil, false)
 		}
-		r.Log.Error(err, "Failed to get the "+common.CrdName)
+		r.Log.Error(err, "Failed to get the "+CrdName)
 		return r.finishReconcile(err, false)
 	}
 
@@ -158,14 +160,14 @@ func (r *FeatureFlagConfigurationReconciler) finishReconcile(err error, requeueI
 		if requeueImmediate {
 			interval = 0
 		}
-		r.Log.Error(err, "Finished Reconciling "+common.CrdName+" with error: %w")
+		r.Log.Error(err, "Finished Reconciling "+CrdName+" with error: %w")
 		return ctrl.Result{Requeue: true, RequeueAfter: interval}, err
 	}
 	interval := common.ReconcileSuccessInterval
 	if requeueImmediate {
 		interval = 0
 	}
-	r.Log.Info("Finished Reconciling " + common.CrdName)
+	r.Log.Info("Finished Reconciling " + CrdName)
 	return ctrl.Result{Requeue: true, RequeueAfter: interval}, nil
 }
 
