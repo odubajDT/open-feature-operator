@@ -213,6 +213,7 @@ func main() {
 	if err = (&featureflagconfiguration.FeatureFlagConfigurationReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+		Log:    ctrl.Log.WithName("FeatureFlagConfiguration Controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "FeatureFlagConfiguration")
 		os.Exit(1)
@@ -226,6 +227,7 @@ func main() {
 	if err = (&flagsourceconfiguration.FlagSourceConfigurationReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+		Log:    ctrl.Log.WithName("FlagSourceConfiguration Controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "FlagSourceConfiguration")
 		os.Exit(1)
