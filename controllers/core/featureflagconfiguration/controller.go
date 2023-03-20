@@ -24,8 +24,9 @@ import (
 	"github.com/open-feature/open-feature-operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -40,8 +41,6 @@ type FeatureFlagConfigurationReconciler struct {
 
 	// Scheme contains the scheme of this controller
 	Scheme *runtime.Scheme
-	// Recorder contains the Recorder of this controller
-	Recorder record.EventRecorder
 	// ReqLogger contains the Logger of this controller
 	Log logr.Logger
 }
@@ -99,7 +98,7 @@ func (r *FeatureFlagConfigurationReconciler) Reconcile(ctx context.Context, req 
 	}
 
 	// Check the provider on the FeatureFlagConfiguration
-	if ffconf.Spec.ServiceProvider == nil {
+	if !ffconf.Spec.ServiceProvider.IsSet() {
 		r.Log.Info("No service provider specified for FeatureFlagConfiguration, using FlagD")
 		ffconf.Spec.ServiceProvider = &corev1alpha1.FeatureFlagServiceProvider{
 			Name: "flagd",
@@ -183,7 +182,7 @@ func (r *FeatureFlagConfigurationReconciler) featureFlagResourceIsOwner(ff *core
 // SetupWithManager sets up the controller with the Manager.
 func (r *FeatureFlagConfigurationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&corev1alpha1.FeatureFlagConfiguration{}).
+		For(&corev1alpha1.FeatureFlagConfiguration{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Owns(&corev1.ConfigMap{}).
 		Complete(r)
 }
