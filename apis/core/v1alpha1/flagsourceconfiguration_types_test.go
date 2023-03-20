@@ -275,14 +275,14 @@ func Test_FLagSourceConfiguration_NewFlagSourceConfigurationSpec(t *testing.T) {
 
 	//error paths
 	t.Setenv(envVarKey(InputConfigurationEnvVarPrefix, SidecarProbesEnabledVar), "blah")
-	fs, err = NewFlagSourceConfigurationSpec()
+	_, err = NewFlagSourceConfigurationSpec()
 	require.NotNil(t, err)
 
 	t.Setenv(envVarKey(InputConfigurationEnvVarPrefix, SidecarPortEnvVar), "blah")
-	fs, err = NewFlagSourceConfigurationSpec()
+	_, err = NewFlagSourceConfigurationSpec()
 	require.NotNil(t, err)
 
 	t.Setenv(envVarKey(InputConfigurationEnvVarPrefix, SidecarMetricPortEnvVar), "blah")
-	fs, err = NewFlagSourceConfigurationSpec()
+	_, err = NewFlagSourceConfigurationSpec()
 	require.NotNil(t, err)
 }
