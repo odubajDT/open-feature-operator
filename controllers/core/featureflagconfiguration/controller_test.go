@@ -26,17 +26,66 @@ func TestFlagSourceConfigurationReconciler_Reconcile(t *testing.T) {
 		ffConfig     *v1alpha1.FeatureFlagConfiguration
 		cm           *corev1.ConfigMap
 		wantProvider string
+		wantCM       *corev1.ConfigMap
+		cmDeleted    bool
 	}{
 		{
-			name: "no provider set",
+			name: "no provider set + no owner set -> ffconfig and cm will be updated",
 			cm: &corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      cmName,
 					Namespace: testNamespace,
+					Annotations: map[string]string{
+						"openfeature.dev/featureflagconfiguration": ffConfigName,
+					},
 				},
 			},
 			ffConfig:     createTestFFConfig(ffConfigName, testNamespace, cmName, ""),
 			wantProvider: "flagd",
+			wantCM: &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cmName,
+					Namespace: testNamespace,
+					Annotations: map[string]string{
+						"openfeature.dev/featureflagconfiguration": ffConfigName,
+					},
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							APIVersion: "core.openfeature.dev/v1alpha1",
+							Kind:       "FeatureFlagConfiguration",
+							Name:       ffConfigName,
+						},
+					},
+				},
+				Data: map[string]string{
+					v1alpha1.FeatureFlagConfigurationConfigMapKey(testNamespace, cmName): "spec",
+				},
+			},
+			cmDeleted: false,
+		},
+		{
+			name: "one owner ref set -> cm will be deleted",
+			cm: &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cmName,
+					Namespace: testNamespace,
+					Annotations: map[string]string{
+						"openfeature.dev/featureflagconfiguration": ffConfigName,
+					},
+				},
+			},
+			ffConfig:     createTestFFConfig(ffConfigName, testNamespace, cmName, ""),
+			wantProvider: "flagd",
+			wantCM: &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cmName,
+					Namespace: testNamespace,
+					Annotations: map[string]string{
+						"openfeature.dev/featureflagconfiguration": ffConfigName,
+					},
+				},
+			},
+			cmDeleted: true,
 		},
 	}
 
@@ -61,6 +110,20 @@ func TestFlagSourceConfigurationReconciler_Reconcile(t *testing.T) {
 				Scheme: fakeClient.Scheme(),
 			}
 
+			if tt.cmDeleted {
+				ffConfig2 := &v1alpha1.FeatureFlagConfiguration{}
+				err = fakeClient.Get(ctx, types.NamespacedName{Name: ffConfigName, Namespace: testNamespace}, ffConfig2)
+				require.Nil(t, err)
+
+				cm2 := &corev1.ConfigMap{}
+				err = fakeClient.Get(ctx, types.NamespacedName{Name: cmName, Namespace: testNamespace}, cm2)
+				require.Nil(t, err)
+
+				cm2.OwnerReferences = append(cm2.OwnerReferences, v1alpha1.GetFfReference(ffConfig2))
+				err := r.Client.Update(ctx, cm2)
+				require.Nil(t, err)
+			}
+
 			_, err = r.Reconcile(ctx, req)
 			require.Nil(t, err)
 
@@ -69,8 +132,21 @@ func TestFlagSourceConfigurationReconciler_Reconcile(t *testing.T) {
 			require.Nil(t, err)
 
 			require.Equal(t, tt.wantProvider, ffConfig2.Spec.ServiceProvider.Name)
-		})
 
+			cm2 := &corev1.ConfigMap{}
+			err = fakeClient.Get(ctx, types.NamespacedName{Name: cmName, Namespace: testNamespace}, cm2)
+
+			if !tt.cmDeleted {
+				require.Nil(t, err)
+				require.Equal(t, tt.wantCM.Data, cm2.Data)
+				require.Len(t, cm2.OwnerReferences, len(tt.wantCM.OwnerReferences))
+				require.Equal(t, tt.wantCM.OwnerReferences[0].APIVersion, cm2.OwnerReferences[0].APIVersion)
+				require.Equal(t, tt.wantCM.OwnerReferences[0].Name, cm2.OwnerReferences[0].Name)
+				require.Equal(t, tt.wantCM.OwnerReferences[0].Kind, cm2.OwnerReferences[0].Kind)
+			} else {
+				require.NotNil(t, err)
+			}
+		})
 	}
 }
 
