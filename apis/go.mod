@@ -5,8 +5,8 @@ go 1.21
 require (
 	github.com/stretchr/testify v1.8.4
 	github.com/xeipuuv/gojsonschema v1.2.0
-	k8s.io/api v0.26.4
-	k8s.io/apimachinery v0.26.4
+	k8s.io/api v0.31.2
+	k8s.io/apimachinery v0.31.2
 	sigs.k8s.io/controller-runtime v0.14.6
 )
 
